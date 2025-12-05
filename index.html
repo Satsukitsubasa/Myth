@@ -1107,6 +1107,20 @@
             <div class="font-size-control"><span class="font-size-label">字体大小:</span><input type="range" min="12" max="20" value="16" class="font-size-slider" id="font-size-slider"><span class="font-size-value" id="font-size-value">16px</span></div>
             <div class="settings-item-list"><div class="settings-item" id="set-background"><i class="fas fa-image"></i><span>设置聊天背景</span></div><div class="settings-item" id="remove-background"><i class="fas fa-ban"></i><span>移除聊天背景</span></div></div>
         </div>
+        
+        <div class="settings-section">
+            <div class="settings-section-title"><i class="fas fa-clock"></i><span>回覆延遲設定</span></div>
+            <div class="settings-item">
+                <span>最大隨機延遲 (秒)</span>
+                <div class="font-size-control" style="flex:1;">
+                    <input type="range" min="0" max="20" value="10" step="0.5" class="font-size-slider" id="reply-delay-slider">
+                    <span class="font-size-value" id="reply-delay-value">10.0</span>
+                </div>
+            </div>
+            <div class="settings-item">
+                <span style="font-size: 12px; color: var(--text-secondary); opacity: 0.8;">實際回覆時間會在 0 秒到此最大值之間隨機延遲。</span>
+            </div>
+        </div>
         <div class="settings-section">
             <div class="settings-section-title"><i class="fas fa-comments"></i>聊天设置</div>
             <div class="settings-item-list">
@@ -1368,7 +1382,29 @@
             avatarModal: { modal: document.getElementById('avatar-modal'), title: document.getElementById('avatar-modal-title'), input: document.getElementById('avatar-input'), cancel: document.getElementById('cancel-avatar'), save: document.getElementById('save-avatar') },
             noteModal: { modal: document.getElementById('note-modal'), input: document.getElementById('note-input'), cancel: document.getElementById('cancel-note'), save: document.getElementById('save-note') },
             pokeModal: { modal: document.getElementById('poke-modal'), input: document.getElementById('poke-input'), cancel: document.getElementById('cancel-poke'), save: document.getElementById('send-poke') },
-            settingsModal: { modal: document.getElementById('settings-modal'), settingsBtn: document.getElementById('settings-btn'), cancel: document.getElementById('cancel-settings'), soundToggle: document.getElementById('sound-toggle'), readReceiptsToggle: document.getElementById('read-receipts-toggle'), typingIndicatorToggle: document.getElementById('typing-indicator-toggle'), replyToggle: document.getElementById('reply-toggle'), clearChat: document.getElementById('clear-chat'), clearStorage: document.getElementById('clear-storage'), themeColorBtns: document.querySelectorAll('.theme-color-btn'), setBackground: document.getElementById('set-background'), removeBackground: document.getElementById('remove-background'), fontSizeSlider: document.getElementById('font-size-slider'), fontSizeValue: document.getElementById('font-size-value'), statsFunction: document.getElementById('stats-function'), coinFunction: document.getElementById('coin-function'), anniversaryFunction: document.getElementById('anniversary-function'), reportFunction: document.getElementById('report-function') },
+            settingsModal: { 
+                modal: document.getElementById('settings-modal'), 
+                settingsBtn: document.getElementById('settings-btn'), 
+                cancel: document.getElementById('cancel-settings'), 
+                soundToggle: document.getElementById('sound-toggle'), 
+                readReceiptsToggle: document.getElementById('read-receipts-toggle'), 
+                typingIndicatorToggle: document.getElementById('typing-indicator-toggle'), 
+                replyToggle: document.getElementById('reply-toggle'), 
+                clearChat: document.getElementById('clear-chat'), 
+                clearStorage: document.getElementById('clear-storage'), 
+                themeColorBtns: document.querySelectorAll('.theme-color-btn'), 
+                setBackground: document.getElementById('set-background'), 
+                removeBackground: document.getElementById('remove-background'), 
+                fontSizeSlider: document.getElementById('font-size-slider'), 
+                fontSizeValue: document.getElementById('font-size-value'), 
+                statsFunction: document.getElementById('stats-function'), 
+                coinFunction: document.getElementById('coin-function'), 
+                anniversaryFunction: document.getElementById('anniversary-function'), 
+                reportFunction: document.getElementById('report-function'),
+                // 新增：延遲設定DOM
+                replyDelaySlider: document.getElementById('reply-delay-slider'),
+                replyDelayValue: document.getElementById('reply-delay-value'),
+            },
             favoritesModal: { modal: document.getElementById('favorites-modal'), favoritesBtn: document.getElementById('favorites-btn'), list: document.getElementById('favorites-list'), cancel: document.getElementById('cancel-favorites') },
             statsModal: { modal: document.getElementById('stats-modal'), content: document.getElementById('stats-content'), closeBtn: document.getElementById('close-stats') },
             sessionModal: { modal: document.getElementById('session-modal'), managerBtn: document.getElementById('session-manager-btn'), list: document.getElementById('session-list'), createBtn: document.getElementById('create-new-session'), cancelBtn: document.getElementById('cancel-session') },
@@ -1486,7 +1522,9 @@
                 isDarkMode: false, colorTheme: "gold", soundEnabled: true, 
                 typingIndicatorEnabled: true, readReceiptsEnabled: true, replyEnabled: true,
                 lastStatusChange: Date.now(), nextStatusChange: 1 + Math.random() * 7,
-                fontSize: 16
+                fontSize: 16,
+                // 新增：最大回覆延遲時間 (秒)，預設為 10 秒
+                maxReplyDelay: 10
             };
         }
 
@@ -1572,12 +1610,18 @@
         };
         
         const updateSettingsModalUI = () => {
-            const { soundToggle, readReceiptsToggle, typingIndicatorToggle, replyToggle, themeColorBtns } = DOMElements.settingsModal;
+            const { soundToggle, readReceiptsToggle, typingIndicatorToggle, replyToggle, themeColorBtns, replyDelaySlider, replyDelayValue } = DOMElements.settingsModal;
             soundToggle.querySelector('span').textContent = `消息音效: ${settings.soundEnabled ? '开启' : '关闭'}`;
             readReceiptsToggle.querySelector('span').textContent = `已读回执: ${settings.readReceiptsEnabled ? '开启' : '关闭'}`;
             typingIndicatorToggle.querySelector('span').textContent = `正在输入: ${settings.typingIndicatorEnabled ? '显示' : '隐藏'}`;
             replyToggle.querySelector('span').textContent = `引用回复: ${settings.replyEnabled ? '开启' : '关闭'}`;
             themeColorBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.theme === settings.colorTheme));
+            
+            // 更新延遲設定滑桿
+            if (replyDelaySlider && replyDelayValue) {
+                replyDelaySlider.value = settings.maxReplyDelay;
+                replyDelayValue.textContent = settings.maxReplyDelay.toFixed(1);
+            }
         };
         
         const updateAvatar = (element, src) => { if (src) element.innerHTML = `<img src="${src}" alt="avatar">`; else element.innerHTML = `<i class="fas fa-user"></i>`; };
@@ -1837,7 +1881,10 @@
                 if(type !== 'system') playSound('send');
                 currentReplyTo = null;
                 updateReplyPreview();
-                if (!isBatchMode && type === 'normal') setTimeout(simulateReply, 800 + Math.random() * 1200);
+                if (!isBatchMode && type === 'normal') {
+                    // 使用新的延遲回覆邏輯
+                    simulateReply();
+                }
             };
             
             if (imageFile) { 
@@ -1903,68 +1950,100 @@
             DOMElements.messageInput.placeholder = placeholder.length > 20 ? placeholder.substring(0, 20) + "..." : placeholder;
         }
 
+        // 修改過的 simulateReply 函式：包含延遲與已讀邏輯
         function simulateReply() {
-    let changed = false;
-    messages.forEach(msg => { if (msg.sender === 'user' && msg.status !== 'read') { msg.status = 'read'; changed = true; } });
-    if(changed) { renderMessages(); throttledSaveData(); }
-    if(settings.typingIndicatorEnabled) { DOMElements.typingIndicator.style.display = 'block'; DOMElements.chatContainer.scrollTop = DOMElements.chatContainer.scrollHeight; }
-    
-    // 修改后的拍一拍逻辑
-    if (Math.random() < 0.03) {
-        const pokeActions = [
-            `拍了拍 ${settings.myName} 的头`,
-            `轻轻戳了戳 ${settings.myName}`,
-            `给 ${settings.myName} 发送了一个爱心`,
-            `摸了摸 ${settings.myName} 的脸`,
-            `从背后抱住了 ${settings.myName}`,
-            `对 ${settings.myName} 说：在想我吗？`,
-            `悄悄亲了一下 ${settings.myName}`,
-            `递给 ${settings.myName} 一杯热茶`,
-            `为 ${settings.myName} 披上外套`,
-            `牵起了 ${settings.myName} 的手`
-        ];
-        
-        const randomAction = getRandomItem(pokeActions);
-        const pokeTypes = [
-            { prefix: "💫", text: `${settings.partnerName} ${randomAction}` },
-            { prefix: "✨", text: `${settings.partnerName} ${randomAction}` },
-            { prefix: "🌟", text: `${settings.partnerName} ${randomAction}` },
-            { prefix: "🥰", text: `${settings.partnerName} ${randomAction}` },
-            { prefix: "💖", text: `${settings.partnerName} ${randomAction}` }
-        ];
-        
-        const selectedPoke = getRandomItem(pokeTypes);
-        addMessage({ 
-            id: Date.now(), 
-            text: `${selectedPoke.prefix} ${selectedPoke.text} ${selectedPoke.prefix}`, 
-            timestamp: new Date(), 
-            type: 'system' 
-        });
-        DOMElements.typingIndicator.style.display = 'none';
-        return;
-    }
+            // 處理回覆
+            if (settings.replyEnabled) {
+                // 1. 生成隨機延遲時間 (0 ~ maxReplyDelay 秒)
+                const maxDelayMs = (settings.maxReplyDelay || 10) * 1000;
+                const randomDelay = Math.random() * maxDelayMs;
+                console.log(`回覆將延遲 ${(randomDelay/1000).toFixed(2)} 秒`);
 
-    const replyCount = Math.random() < 0.75 ? 1 : (Math.random() < 0.95 ? 2 : 3);
-    let delay = 0;
-    for (let i = 0; i < replyCount; i++) {
-        delay += 1500 + Math.random() * 2000;
-        setTimeout(() => {
-            const text = Math.random() < 0.15 ? getRandomItem(CONSTANTS.REPLY_EMOJIS) : getRandomItem(CONSTANTS.REPLY_MESSAGES);
-            let replyTo = null;
-            // 修改这里：将 0.3 改为更小的值来降低引用回复概率
-            if (settings.replyEnabled && Math.random() < 0.1) { // 改为 10% 概率
-                const userMessages = messages.filter(m => m.sender === 'user').slice(-10);
-                if (userMessages.length > 0) {
-                    const randomMessage = getRandomItem(userMessages);
-                    replyTo = { id: randomMessage.id, sender: randomMessage.sender, text: randomMessage.text };
+                // 2. 顯示輸入中
+                if(settings.typingIndicatorEnabled) { 
+                    DOMElements.typingIndicator.style.display = 'block'; 
+                    DOMElements.chatContainer.scrollTop = DOMElements.chatContainer.scrollHeight; 
                 }
+
+                // 3. 在延遲後執行回覆
+                setTimeout(() => {
+                    DOMElements.typingIndicator.style.display = 'none';
+                    
+                    // 處理已讀回執 (在對方回覆前標記為已讀)
+                    let changed = false;
+                    messages.forEach(msg => { 
+                        if (msg.sender === 'user' && msg.status !== 'read') { 
+                            msg.status = 'read'; changed = true; 
+                        } 
+                    });
+                    if(changed) { renderMessages(); throttledSaveData(); }
+
+                    // 生成回覆內容
+                    // 拍一拍邏輯移到內部判斷
+                    if (Math.random() < 0.03) {
+                        handlePokeReply();
+                        return;
+                    }
+
+                    const replyCount = Math.random() < 0.75 ? 1 : (Math.random() < 0.95 ? 2 : 3);
+                    let innerDelay = 0;
+                    
+                    for (let i = 0; i < replyCount; i++) {
+                        innerDelay += (i === 0 ? 0 : 1500 + Math.random() * 2000); // 第一條訊息立刻發，後續有間隔
+                        setTimeout(() => {
+                            const text = Math.random() < 0.15 ? getRandomItem(CONSTANTS.REPLY_EMOJIS) : getRandomItem(CONSTANTS.REPLY_MESSAGES);
+                            let replyTo = null;
+                            if (settings.replyEnabled && Math.random() < 0.1) {
+                                const userMessages = messages.filter(m => m.sender === 'user').slice(-10);
+                                if (userMessages.length > 0) {
+                                    const randomMessage = getRandomItem(userMessages);
+                                    replyTo = { id: randomMessage.id, sender: randomMessage.sender, text: randomMessage.text };
+                                }
+                            }
+                            addMessage({ id: Date.now() + i, sender: 'partner', text, timestamp: new Date(), favorited: false, replyTo, type:'normal' });
+                            playSound('message');
+                        }, innerDelay);
+                    }
+                }, randomDelay);
+
+            } else {
+                handlePokeReply();
             }
-            addMessage({ id: Date.now() + i, sender: 'partner', text, timestamp: new Date(), favorited: false, replyTo, type:'normal' });
-            playSound('message');
-            if (i === replyCount - 1) DOMElements.typingIndicator.style.display = 'none';
-        }, delay);
-    }
-}
+        }
+
+        // 修改：獨立的拍一拍邏輯
+        function handlePokeReply() {
+             const pokeActions = [
+                `拍了拍 ${settings.myName} 的头`,
+                `轻轻戳了戳 ${settings.myName}`,
+                `给 ${settings.myName} 发送了一个爱心`,
+                `摸了摸 ${settings.myName} 的脸`,
+                `从背后抱住了 ${settings.myName}`,
+                `对 ${settings.myName} 说：在想我吗？`,
+                `悄悄亲了一下 ${settings.myName}`,
+                `递给 ${settings.myName} 一杯热茶`,
+                `为 ${settings.myName} 披上外套`,
+                `牵起了 ${settings.myName} 的手`
+            ];
+            
+            const randomAction = getRandomItem(pokeActions);
+            const pokeTypes = [
+                { prefix: "💫", text: `${settings.partnerName} ${randomAction}` },
+                { prefix: "✨", text: `${settings.partnerName} ${randomAction}` },
+                { prefix: "🌟", text: `${settings.partnerName} ${randomAction}` },
+                { prefix: "🥰", text: `${settings.partnerName} ${randomAction}` },
+                { prefix: "💖", text: `${settings.partnerName} ${randomAction}` }
+            ];
+            
+            const selectedPoke = getRandomItem(pokeTypes);
+            addMessage({ 
+                id: Date.now(), 
+                text: `${selectedPoke.prefix} ${selectedPoke.text} ${selectedPoke.prefix}`, 
+                timestamp: new Date(), 
+                type: 'system' 
+            });
+            DOMElements.typingIndicator.style.display = 'none';
+        }
         
         function handleCoinToss() {
             const result = Math.random() < 0.5 ? '是' : '否';
@@ -2332,6 +2411,16 @@
             }
             DOMElements.settingsModal.statsFunction.addEventListener('click', () => { renderStatsContent(); hideModal(DOMElements.settingsModal.modal); showModal(DOMElements.statsModal.modal); });
             DOMElements.settingsModal.coinFunction.addEventListener('click', () => { hideModal(DOMElements.settingsModal.modal); handleCoinToss(); });
+            
+            // 新增：延遲時間滑桿監聽
+            const { replyDelaySlider, replyDelayValue } = DOMElements.settingsModal;
+            if (replyDelaySlider) {
+                replyDelaySlider.addEventListener('input', (e) => {
+                    settings.maxReplyDelay = parseFloat(e.target.value);
+                    replyDelayValue.textContent = settings.maxReplyDelay.toFixed(1);
+                    throttledSaveData();
+                });
+            }
         }
 
         function initDataManagementListeners() {
