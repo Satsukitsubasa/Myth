@@ -10573,18 +10573,6 @@ body { height: var(--app-height) !important; }
 /* if there is a batch-preview positioned absolute, make space above input */
 .batch-preview { bottom: 120px !important; }
 </style>
-
-<!-- Reply Delay Modal (injected) -->
-<div id="reply-delay-modal" class="modal" style="display:none;">
-  <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="reply-delay-title">
-    <div class="modal-title" id="reply-delay-title"><i class="fa-solid fa-clock"></i> 設定回覆延遲時間</div>
-    <div style="margin-bottom:12px;color:var(--text-secondary);font-size:13px;">
-      設定機器人回覆的最大延遲時間（秒）。輸入數值代表最大隨機延遲（例如輸入 2 → 回覆會隨機延遲 0 ~ 2 秒）。輸入 0 則為即時回覆。
-    </div>
-    <input id="reply-delay-input" class="modal-input" type="number" step="0.1" min="0" placeholder="最大延遲（秒）">
-    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px;">
-      <button class="modal-btn modal-btn-secondary" onclick="closeReplyDelayModal()">取消</button>
-      <button class="modal-btn modal-btn-primary" onclick="saveReplyDelay()">保存</button>
     </div>
   </div>
 </div>
@@ -10618,23 +10606,6 @@ function saveReplyDelay(){
     }
 }
 
-/* Add settings button into settings list if present (in DOMContentLoaded) */
-document.addEventListener('DOMContentLoaded', () => {
-    const lists = document.querySelectorAll('.settings-item-list, .settings-list, #settings-list');
-    if (lists && lists.length) {
-        const container = lists[0];
-        // avoid duplicate
-        if (!document.getElementById('reply-delay-settings-entry')) {
-            const entry = document.createElement('div');
-            entry.className = 'settings-item';
-            entry.id = 'reply-delay-settings-entry';
-            entry.style.cursor = 'pointer';
-            entry.innerHTML = '<i class=\"fa-solid fa-clock\"></i><span>設定回覆延遲時間</span>';
-            entry.addEventListener('click', openReplyDelayModal);
-            container.appendChild(entry);
-        }
-    }
-});
 
 /* Wrap existing simulateReply (if present) to respect reply delay.
    We attempt to wrap dynamically: if simulateReply exists now, wrap immediately.
